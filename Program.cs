@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using MultiTenantTaskBoard.Auth;
 using MultiTenantTaskBoard.Data;
 using MultiTenantTaskBoard.Models;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,14 +57,19 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
-
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Enabled in all environments (not just dev) so the deployed Azure demo
+// has a real, browsable landing point instead of a bare 404 on "/".
+app.MapOpenApi();
+app.MapScalarApiReference(options =>
+{
+    options.Title = "Multi-Tenant Task Board API";
+});
+
+app.MapGet("/", () => Results.Redirect("/scalar/v1"));
 
 // --- Auth: issue a demo token scoped to a tenant ---
 // POST /auth/token/{tenantId}  ->  { "token": "..." }
